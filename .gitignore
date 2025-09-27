@@ -1,0 +1,13 @@
+Desktop-*
+build-*
+*.pro.user
+*.pro.user.*
+*.o
+moc_*
+polinom_builder/.qmake.stash
+*.txt
+*.csv
+*.odt
+polinom_builder/.qtc_clangd
+*-Debug/
+
