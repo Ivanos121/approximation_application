@@ -37,6 +37,7 @@ protected slots:
     void polinomButtons();
 
     void onComboBoxChanged(int index);
+    void updateButtonState();
 private:
     Ui::Polinom_builder *ui;
     QChart *chart;
@@ -46,5 +47,6 @@ private:
     void addRows();
     void clearTableExceptFirstRow();
     void save_vent_identf();
+    QString QRegExp(const char *);
 };
 #endif // POLINOM_BUILDER_H

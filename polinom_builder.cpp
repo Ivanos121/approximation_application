@@ -17,6 +17,7 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <algorithm>
+#include <QRegularExpression>
 
 Poly_parameters poly_parameters;
 
@@ -25,6 +26,12 @@ Polinom_builder::Polinom_builder(QWidget *parent)
     , ui(new Ui::Polinom_builder)
 {
     ui->setupUi(this);
+
+    ui->saveButton->setEnabled(false);
+    ui->resultButton->setEnabled(false);
+    ui->plotGraph->setEnabled(false);
+    ui->polinomButton->setEnabled(false);
+    ui->clearButton->setEnabled(false);
 
     ui->label_5->setWordWrap(true);
     ui->label_5->setText("<html><head/><body><p><span style=\" font-size:12pt; font-weight:700;\">Рассчитанные коэффициенты<br>аппроксимации</span></p></body></html>");
@@ -52,12 +59,14 @@ Polinom_builder::Polinom_builder(QWidget *parent)
     connect(ui->loadButton, &QPushButton::clicked, this, &Polinom_builder::loadButton);
     connect(ui->polinomButton, &QPushButton::clicked, this, &Polinom_builder::polinomButtons);
     connect(ui->comboBox, &QComboBox::currentIndexChanged, this, &Polinom_builder::onComboBoxChanged);
+    connect(ui->lineEditX, &QLineEdit::textChanged, this, &Polinom_builder::updateButtonState);
+    connect(ui->lineEditY, &QLineEdit::textChanged, this, &Polinom_builder::updateButtonState);
 
     chart = new QChart();
     chart->layout()->setContentsMargins(0,0,0,0);
     chart->setTitle(" ");
 
-    // Создаем серию данных
+    // Создаем серию данныхhhhhhhhhhhhhhhhhhh
     series = new QLineSeries();
     chart->addSeries(series);
 
@@ -139,13 +148,6 @@ void Polinom_builder::closebutton()
 
 void Polinom_builder::plotGraph()
 {
-    // Проверяем, есть ли данные в серии
-    if (series->count() == 0)
-    {
-        QMessageBox::warning(this, "Внимание!", "Нет данных для построения");
-        return; // Выход из функции, если данных нет
-    }
-
     // Считываем значения из QLineEdit
     QString timeText = ui->lineEditX->text();
     QString levelText = ui->lineEditY->text();
@@ -265,19 +267,6 @@ void Polinom_builder::plotGraph()
 
 void Polinom_builder::clearButton()
 {
-    // Проверяем, есть ли данные в серии
-    if (series->count() == 0)
-    {
-        QMessageBox::warning(this, "Внимание!", "Нет данных для очистки");
-        return; // Выход из функции, если данных нет
-    }
-
-    // Удаляем все серии из графика
-    if (ui->chartView->chart())
-    {
-        ui->chartView->chart()->removeAllSeries();
-    }
-
     // Удаляем оси (если необходимо)
     auto axes = ui->chartView->chart()->axes();
 
@@ -294,9 +283,6 @@ void Polinom_builder::clearButton()
     ui->lineEditX->setText("[]"); // Восстанавливаем квадратные скобки для времени
     ui->lineEditY->setText("[]"); // Восстанавливаем квадратные скобки для уровня
 
-    // Создаем новую серию
-    series = new QLineSeries();
-
     // Создаем новые оси
     QValueAxis *axisX = new QValueAxis;
     QValueAxis *axisY = new QValueAxis;
@@ -312,6 +298,12 @@ void Polinom_builder::clearButton()
     // Настройка сетки
     axisX->setGridLineVisible(true);
     axisY->setGridLineVisible(true);
+
+    // Создаем новую серию
+    series = new QLineSeries();
+
+    // Добавляем новую серию в график
+    ui->chartView->chart()->addSeries(series);
 
     // Привязываем оси к серии (если серия уже существует)
     if (series)
@@ -334,17 +326,17 @@ void Polinom_builder::clearButton()
     // Отладочное сообщение
     qDebug() << "График очищен и поля ввода восстановлены.";
     clearTableExceptFirstRow();
+    ui->plot->clear();
+
+    ui->saveButton->setEnabled(false);
+    ui->resultButton->setEnabled(false);
+    ui->plotGraph->setEnabled(false);
+    ui->polinomButton->setEnabled(false);
+    ui->clearButton->setEnabled(false);
 }
 
 void Polinom_builder::resultButton()
 {
-    // Проверяем, есть ли данные в серии
-    if (series->count() == 0)
-    {
-        QMessageBox::warning(this, "Внимание!", "Нет данных для расчета");
-        return; // Выход из функции, если данных нет
-    }
-
     clearTableExceptFirstRow();
     QString selectedText = ui->comboBox->currentText(); // Получаем текст текущего элемента
     poly_parameters.x_y_inv_optimalDegree = -1;
@@ -380,36 +372,36 @@ void Polinom_builder::resultButton()
         poly_parameters.levelArrayAppr[i] = x_y_inv_poly.evaluate(poly_parameters.timeArray[i]);
     }
 
-    // Создаем новую серию
-    QLineSeries *newSeries = new QLineSeries();
+    // // Создаем новую серию
+    // QLineSeries *newSeries = new QLineSeries();
 
-    for (int i = 0; i < poly_parameters.timeArray.size(); ++i)
-    {
-        newSeries->append(poly_parameters.timeArray[i], poly_parameters.levelArray[i]);
-    }
+    // for (int i = 0; i < poly_parameters.timeArray.size(); ++i)
+    // {
+    //     newSeries->append(poly_parameters.timeArray[i], poly_parameters.levelArray[i]);
+    // }
 
-    // Добавляем новую серию в график
-    chart->addSeries(newSeries);
+    // // Добавляем новую серию в график
+    // chart->addSeries(newSeries);
 
-    // Устанавливаем стиль для новой серии (например, цвет)
-    newSeries->setName("Новая серия"); // Устанавливаем имя для новой серии
-    newSeries->setPen(QPen(Qt::blue)); // Устанавливаем цвет линии
+    // // Устанавливаем стиль для новой серии (например, цвет)
+    // newSeries->setName("Новая серия"); // Устанавливаем имя для новой серии
+    // newSeries->setPen(QPen(Qt::blue)); // Устанавливаем цвет линии
 
-    // Обновляем оси, если необходимо
-    chart->createDefaultAxes(); // Создает оси для новой серии, если они еще не созданы
+    // // Обновляем оси, если необходимо
+    // chart->createDefaultAxes(); // Создает оси для новой серии, если они еще не созданы
 
-    // Подписываем оси
-    auto xAxis = qobject_cast<QValueAxis *>(ui->chartView->chart()->axes(Qt::Horizontal).first());
-    if (xAxis)
-    {
-        xAxis->setTitleText("Ось X (Время)"); // Подпись для оси X
-    }
+    // // Подписываем оси
+    // auto xAxis = qobject_cast<QValueAxis *>(ui->chartView->chart()->axes(Qt::Horizontal).first());
+    // if (xAxis)
+    // {
+    //     xAxis->setTitleText("Ось X (Время)"); // Подпись для оси X
+    // }
 
-    auto yAxis = qobject_cast<QValueAxis *>(ui->chartView->chart()->axes(Qt::Vertical).first());
-    if (yAxis)
-    {
-        yAxis->setTitleText("Ось Y (Уровень)"); // Подпись для оси Y
-    }
+    // auto yAxis = qobject_cast<QValueAxis *>(ui->chartView->chart()->axes(Qt::Vertical).first());
+    // if (yAxis)
+    // {
+    //     yAxis->setTitleText("Ось Y (Уровень)"); // Подпись для оси Y
+    // }
 
 
     // Принудительно обновляем график
@@ -417,7 +409,6 @@ void Polinom_builder::resultButton()
 
     addRows();
     save_vent_identf();
-    ui->plot->clear();
 }
 
 void Polinom_builder::saveButton()
@@ -425,7 +416,8 @@ void Polinom_builder::saveButton()
     // Проверяем, есть ли данные в серии
     if (series->count() == 0)
     {
-        QMessageBox::warning(this, "Внимание!", "Нет данных для сохранения");
+        ui->saveButton->setEnabled(false);
+        //QMessageBox::warning(this, "Внимание!", "Нет данных для сохранения");
         return; // Выход из функции, если данных нет
     }
 
@@ -494,12 +486,16 @@ void Polinom_builder::loadButton()
     if (loaded)
     {
         qDebug() << "Данные успешно загружены из XML, точек:" << loadedData.size();
-        // Можно обновить график: series->replace(loadedData); или аналогично
     }
     else
     {
         qDebug() << "Ошибка загрузки XML";
     }
+    ui->saveButton->setEnabled(true);
+    ui->resultButton->setEnabled(true);
+    ui->plotGraph->setEnabled(true);
+    ui->polinomButton->setEnabled(true);
+    ui->clearButton->setEnabled(true);
 }
 
 bool Polinom_builder::loadPointsFromXml()
@@ -507,7 +503,7 @@ bool Polinom_builder::loadPointsFromXml()
     QVector<QPointF> points;
 
     QString filter = "Данные сигнала скорости (*.xml);;Все файлы (*.*)";
-    QString initialPath = "../ImView2_Qt6/Reference materials";
+    QString initialPath = "/home/elf/ImView2_Qt6/Reference materials";
 
     QString str = QFileDialog::getOpenFileName(this, "Выбрать имя, под которым загрузить данные", initialPath
                                        , filter);
@@ -598,7 +594,7 @@ bool Polinom_builder::loadPointsFromXml()
     }
 
     // Обновляем серию
-    //series->clear();  // Очищаем старую серию
+    series->clear();  // Очищаем старую серию
     series->replace(points);  // Добавляем новые точки
 
     poly_parameters.timeArray.clear();
@@ -608,7 +604,6 @@ bool Polinom_builder::loadPointsFromXml()
         poly_parameters.timeArray.append(point.x());
         poly_parameters.levelArray.append(point.y());
     }
-
 
     // Принудительно обновляем график
     if (chart->series().contains(series))
@@ -830,22 +825,6 @@ void Polinom_builder::addRows()
 
 void Polinom_builder::clearTableExceptFirstRow()
 {
-    // // Очистка содержимого таблицы, кроме заголовков и первой строки
-    // for (int row = 0; row < ui->tableWidget->rowCount(); ++row) // Начинаем с 1, чтобы пропустить первую строку
-    // {
-    //     for (int col = 0; col < ui->tableWidget->columnCount(); ++col)
-    //     {
-    //         QTableWidgetItem *item = ui->tableWidget->item(row, col);
-    //         if (item)
-    //         {
-    //             delete item; // Удаляем элемент
-    //         }
-    //     }
-    // }
-
-    // // Устанавливаем количество строк в 1, чтобы оставить только заголовки и первую строку
-    // // ui->tableWidget->setRowCount(1);
-
     // Удаляем все строки, кроме первой
     int rowCount = ui->tableWidget->rowCount();
     for (int row = rowCount - 1; row >= 0; --row) // Начинаем с последней строки и идем вверх
@@ -920,4 +899,23 @@ void Polinom_builder::onComboBoxChanged(int index)
     {
         ui->lineEdit->setDisabled(false);  // делаем доступным
     }
+}
+
+void Polinom_builder::updateButtonState()
+{
+    QString text1 = ui->lineEditX->text();
+    QString text2 = ui->lineEditY->text();
+
+    text1.remove('[').remove(']'); // Удаляем квадратные скобки
+    text2.remove('[').remove(']'); // Удаляем квадратные скобки
+
+    qDebug() << "Text1:" << text1; // Отладочное сообщение
+    qDebug() << "Text2:" << text2; // Отладочное сообщение
+
+    // Проверяем, содержит ли текст хотя бы один символ, кроме скобок
+    bool isEnabled = text1.contains(QRegularExpression("[^(){}\$$\$$]")) ||
+                     text2.contains(QRegularExpression("[^(){}\$$\$$]"));
+
+    ui->plotGraph->setEnabled(isEnabled);
+    ui->clearButton->setEnabled(isEnabled);
 }

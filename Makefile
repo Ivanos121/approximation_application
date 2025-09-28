@@ -1194,10 +1194,9 @@ plot.o: plot.cpp plot.h
 
 polinom_builder.o: polinom_builder.cpp polinom_builder.h \
 		ui_polinom_builder.h \
-		mylineedit.h \
-		plot.h \
 		Poly_parametr.h \
-		polynomial.h
+		polynomial.h \
+		plot.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o polinom_builder.o polinom_builder.cpp
 
 polynomial.o: polynomial.cpp polynomial.h
