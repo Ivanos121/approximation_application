@@ -263,6 +263,12 @@ void Polinom_builder::plotGraph()
 
     // Отладочное сообщение о завершении
     qDebug() << "График обновлен.";
+
+    ui->saveButton->setEnabled(true);
+    ui->resultButton->setEnabled(true);
+    ui->plotGraph->setEnabled(true);
+    ui->polinomButton->setEnabled(true);
+    ui->clearButton->setEnabled(true);
 }
 
 void Polinom_builder::clearButton()
@@ -409,6 +415,8 @@ void Polinom_builder::resultButton()
 
     addRows();
     save_vent_identf();
+
+    ui->polinomButton->setEnabled(true);
 }
 
 void Polinom_builder::saveButton()
@@ -416,7 +424,7 @@ void Polinom_builder::saveButton()
     // Проверяем, есть ли данные в серии
     if (series->count() == 0)
     {
-        ui->saveButton->setEnabled(false);
+        //ui->saveButton->setEnabled(false);
         //QMessageBox::warning(this, "Внимание!", "Нет данных для сохранения");
         return; // Выход из функции, если данных нет
     }
@@ -424,7 +432,7 @@ void Polinom_builder::saveButton()
     QString str;
     QString filter = "Данные сигнала скорости (*.xml);;Все файлы (*.*)";
     QString selectedFilter;  // Переменная для хранения выбранного фильтра
-    QString initialPath = "/home/elf/ImView2_Qt6/Reference materials"; // Замените на нужный путь
+    QString initialPath = "../Reference materials"; // Замените на нужный путь
 
 
     str = QFileDialog::getSaveFileName(this, "Выбрать имя, под которым сохранить данные", initialPath
@@ -486,16 +494,16 @@ void Polinom_builder::loadButton()
     if (loaded)
     {
         qDebug() << "Данные успешно загружены из XML, точек:" << loadedData.size();
+        ui->saveButton->setEnabled(true);
+        ui->resultButton->setEnabled(true);
+        ui->plotGraph->setEnabled(false);
+        ui->polinomButton->setEnabled(false);
+        ui->clearButton->setEnabled(true);
     }
     else
     {
         qDebug() << "Ошибка загрузки XML";
     }
-    ui->saveButton->setEnabled(true);
-    ui->resultButton->setEnabled(true);
-    ui->plotGraph->setEnabled(true);
-    ui->polinomButton->setEnabled(true);
-    ui->clearButton->setEnabled(true);
 }
 
 bool Polinom_builder::loadPointsFromXml()
@@ -503,7 +511,7 @@ bool Polinom_builder::loadPointsFromXml()
     QVector<QPointF> points;
 
     QString filter = "Данные сигнала скорости (*.xml);;Все файлы (*.*)";
-    QString initialPath = "/home/elf/ImView2_Qt6/Reference materials";
+    QString initialPath = "../Reference materials";
 
     QString str = QFileDialog::getOpenFileName(this, "Выбрать имя, под которым загрузить данные", initialPath
                                        , filter);
@@ -917,5 +925,5 @@ void Polinom_builder::updateButtonState()
                      text2.contains(QRegularExpression("[^(){}\$$\$$]"));
 
     ui->plotGraph->setEnabled(isEnabled);
-    ui->clearButton->setEnabled(isEnabled);
+    //ui->clearButton->setEnabled(isEnabled);
 }

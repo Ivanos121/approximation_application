@@ -26,7 +26,7 @@ Plot::~Plot()
 void Plot::drawBorder()
 {
     QPainter painter(this);
-    QColor coordLineColor(255,255,255);
+    QColor coordLineColor(0,0,0);
 
     QPen apen = QPen(coordLineColor);
     apen.setWidth(4);
@@ -41,7 +41,7 @@ void Plot::drawBorder()
 void Plot::drawGrid()
 {
     QPainter painter(this);
-    QColor coordLineColor2(255, 255, 255);
+    QColor coordLineColor2(0, 0, 0);
 
     QPen apen2 = QPen(coordLineColor2);
     apen2.setWidthF(0.5);
@@ -86,7 +86,7 @@ void Plot::drawGrid()
 void Plot::drawMainGrid()
 {
     QPainter painter(this);
-    QColor coordLineColor3(255, 255, 255);
+    QColor coordLineColor3(0, 0, 0);
 
     QPen apen3 = QPen(coordLineColor3);
     apen3.setWidthF(0.5);
@@ -148,7 +148,7 @@ void Plot::drawMainGrid()
 void Plot::drawAxisText()
 {
     QPainter painter(this);
-    QColor coordLineColor(255, 255, 255);
+    QColor coordLineColor(0, 0, 0);
 
     QPen apen = QPen(coordLineColor);
     apen.setWidth(2);
@@ -205,8 +205,8 @@ void Plot::drawBackground()
     QPainter painter(this);
 
     QLinearGradient linearGrad;
-    linearGrad.setColorAt( 0 , QColor(80, 80, 80));
-    linearGrad.setColorAt( 1 , QColor(50, 50, 50));
+    linearGrad.setColorAt( 0 , QColor(255, 255, 255));
+    linearGrad.setColorAt( 1 , QColor(255, 255, 255));
     painter.fillRect(0, 0, width(), height(), linearGrad);
 }
 
