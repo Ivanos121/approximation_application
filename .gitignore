@@ -1,5 +1,6 @@
 Desktop-*
 build-*
+build/*
 *.pro.user
 *.pro.user.*
 *.o
