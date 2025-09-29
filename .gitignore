@@ -1,14 +1,14 @@
 Desktop-*
 build-*
-build/*
+/build/
 *.pro.user
 *.pro.user.*
 *.o
 moc_*
-approximation_application/.qmake.stash
+.qmake.stash
 *.txt
 *.csv
 *.odt
-approximation_application/.qtc_clangd
+.qtc_clangd
 *-Debug/
 
