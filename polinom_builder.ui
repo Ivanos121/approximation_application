@@ -44,27 +44,17 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="MyLineEdit" name="lineEditX"/>
-          </item>
-          <item row="6" column="1">
-           <widget class="QPushButton" name="clearButton">
+          <item row="13" column="1">
+           <widget class="QPushButton" name="polinomButton">
             <property name="text">
-             <string>Очистить график</string>
+             <string>Апроксимировать график</string>
             </property>
            </widget>
           </item>
-          <item row="10" column="1">
-           <widget class="QPushButton" name="resultButton">
+          <item row="14" column="1">
+           <widget class="QPushButton" name="saveApproxButton">
             <property name="text">
-             <string>Расчет коэффициентов аппроксимации</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QPushButton" name="plotGraph">
-            <property name="text">
-             <string>Построить график</string>
+             <string>Сохранить результаты аппроксимации</string>
             </property>
            </widget>
           </item>
@@ -82,29 +72,25 @@
             </property>
            </widget>
           </item>
+          <item row="6" column="1">
+           <widget class="QPushButton" name="clearButton">
+            <property name="text">
+             <string>Очистить график</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QPushButton" name="resultButton">
+            <property name="text">
+             <string>Расчет коэффициентов аппроксимации</string>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="1">
            <widget class="MyLineEdit" name="lineEditY"/>
           </item>
-          <item row="8" column="1">
-           <widget class="QPushButton" name="saveButton">
-            <property name="text">
-             <string>Сохранить график</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Уровень</string>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="1">
-           <widget class="QPushButton" name="polinomButton">
-            <property name="text">
-             <string>Апроксимировать график</string>
-            </property>
-           </widget>
+          <item row="0" column="1">
+           <widget class="MyLineEdit" name="lineEditX"/>
           </item>
           <item row="3" column="0">
            <widget class="QLabel" name="label_6">
@@ -125,8 +111,19 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QComboBox" name="comboBox"/>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Уровень</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QPushButton" name="saveButton">
+            <property name="text">
+             <string>Сохранить график</string>
+            </property>
+           </widget>
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_8">
@@ -135,10 +132,20 @@
             </property>
            </widget>
           </item>
-          <item row="14" column="1">
-           <widget class="QPushButton" name="saveApproxButton">
+          <item row="2" column="1">
+           <widget class="QComboBox" name="comboBox"/>
+          </item>
+          <item row="5" column="1">
+           <widget class="QPushButton" name="plotGraph">
             <property name="text">
-             <string>Сохранить результаты аппроксимации</string>
+             <string>Построить график</string>
+            </property>
+           </widget>
+          </item>
+          <item row="15" column="1">
+           <widget class="QPushButton" name="resieveButton">
+            <property name="text">
+             <string>Передать данные</string>
             </property>
            </widget>
           </item>

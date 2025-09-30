@@ -6,6 +6,7 @@
 #include <QMainWindow>
 #include <QValueAxis>
 #include <QComboBox>
+#include <QLocalServer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -42,6 +43,7 @@ protected slots:
     void clearButton_approx();
     void polinomButton_approx();
     void saveApproxButton();
+    void sendData();
 private:
     Ui::Polinom_builder *ui;
     QChart *chart, *chart_approx;
@@ -53,5 +55,6 @@ private:
     void clearTableExceptFirstRow();
     void save_vent_identf();
     QString QRegExp(const char *);
+    QLocalServer *server;
 };
 #endif // POLINOM_BUILDER_H

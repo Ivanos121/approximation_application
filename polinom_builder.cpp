@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <QRegularExpression>
 #include <QSplineSeries>
+#include <QLocalSocket>
 
 Poly_parameters poly_parameters;
 
@@ -27,6 +28,9 @@ Polinom_builder::Polinom_builder(QWidget *parent)
     , ui(new Ui::Polinom_builder)
 {
     ui->setupUi(this);
+
+    connect(ui->resieveButton, &QPushButton::clicked, this, &Polinom_builder::sendData);
+
 
     ui->saveButton->setEnabled(false);
     ui->resultButton->setEnabled(false);
@@ -1172,3 +1176,42 @@ bool Polinom_builder::saveKoeffsToXml(const QString &fileName)
     qDebug() << "Сохранено коэффициентов:" << poly_parameters.x_y_inv_koeffss.size();
     return true;
 }
+
+void Polinom_builder::sendData()
+{
+    QLocalSocket socket;
+    socket.connectToServer("MyLocalServer");
+
+    if (!socket.waitForConnected(3000)) {
+        qDebug() << "Connection failed:" << socket.errorString();
+        return;
+    }
+
+    QByteArray dataToSend;
+    QDataStream stream(&dataToSend, QIODevice::WriteOnly);
+
+    // Извлечение данных только из второго столбца (индекс 1)
+    for (int i = 0; i < ui->tableWidget->rowCount(); ++i)
+    {
+        // Получаем значение из ячейки второго столбца
+        bool ok;
+        double value = ui->tableWidget->item(i, 2)->text().toDouble(&ok); // Индекс 1 для второго столбца
+        if (ok)
+        {
+            // Записываем значение в поток
+            stream << value;
+        }
+    }
+
+    // Отправляем данные на сервер
+    socket.write(dataToSend);
+    socket.flush();
+
+    if (socket.waitForReadyRead(3000)) {
+        QByteArray response = socket.readAll();
+        qDebug() << "Response from server:" << response;
+    }
+
+    socket.disconnectFromServer();
+}
+
