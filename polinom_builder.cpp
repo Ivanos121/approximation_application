@@ -1179,39 +1179,53 @@ bool Polinom_builder::saveKoeffsToXml(const QString &fileName)
 
 void Polinom_builder::sendData()
 {
-    QLocalSocket socket;
-    socket.connectToServer("MyLocalServer");
+    socket = new QLocalSocket();
+    socket->connectToServer("MyLocalServer");
 
-    if (!socket.waitForConnected(3000)) {
-        qDebug() << "Connection failed:" << socket.errorString();
-        return;
-    }
+    int rowCount = 0;
 
-    QByteArray dataToSend;
-    QDataStream stream(&dataToSend, QIODevice::WriteOnly);
-
-    // Извлечение данных только из второго столбца (индекс 1)
-    for (int i = 0; i < ui->tableWidget->rowCount(); ++i)
+    if (socket->waitForConnected())
     {
-        // Получаем значение из ячейки второго столбца
-        bool ok;
-        double value = ui->tableWidget->item(i, 2)->text().toDouble(&ok); // Индекс 1 для второго столбца
-        if (ok)
+        if(ui->comboBox->currentText() == "Ввести вручную")
         {
-            // Записываем значение в поток
-            stream << value;
+            rowCount = ui->lineEdit->text().toInt() + 1;
         }
+        else if(ui->comboBox->currentText() == "Расчитать автоматически")
+        {
+            rowCount = 6;
+        }
+
+        Data dataToSend;
+        dataToSend.coff.resize(rowCount); // Устанавливаем размер вектора в зависимости от rowCount
+
+        // Проходим по первым трем строкам
+        for (int rowIndex = 0; rowIndex < rowCount; ++rowIndex)
+        {
+            QTableWidgetItem *item = ui->tableWidget->item(rowIndex, 2); // Индекс 1 для второго столбца
+            if (item)
+            {
+                // Присваиваем значения в вектор
+                dataToSend.coff[rowIndex] = item->text().toDouble();
+            }
+
+        }
+        QByteArray block;
+        QDataStream stream(&block, QIODevice::WriteOnly);
+
+        // Используем цикл для добавления значений в поток
+        for (int i = 0; i < rowCount; ++i)
+        {
+            stream << dataToSend.coff[i]; // Добавляем значение в поток
+        }
+
+        socket->write(block);
+        socket->flush();
+        socket->waitForBytesWritten();
+        socket->disconnectFromServer();
+    } else
+    {
+        // Обработка ошибки подключения
+        qDebug() << "Connection failed: " << socket->errorString();
     }
-
-    // Отправляем данные на сервер
-    socket.write(dataToSend);
-    socket.flush();
-
-    if (socket.waitForReadyRead(3000)) {
-        QByteArray response = socket.readAll();
-        qDebug() << "Response from server:" << response;
-    }
-
-    socket.disconnectFromServer();
 }
 

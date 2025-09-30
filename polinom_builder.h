@@ -1,12 +1,16 @@
 #ifndef POLINOM_BUILDER_H
 #define POLINOM_BUILDER_H
 
+#include "ui_polinom_builder.h"
 #include <QChart>
 #include <QLineSeries>
 #include <QMainWindow>
 #include <QValueAxis>
 #include <QComboBox>
 #include <QLocalServer>
+#include <QVector>
+#include <QTableWidgetItem>
+#include <QLocalSocket>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -25,6 +29,12 @@ public:
     double computeError(const QVector<double> &x, const QVector<double> &y, const QVector<double> &coeffs);
     QVector<double> approximate(const QVector<double> &x, const QVector<double> &y, size_t degree);
     int bestDegree(const QVector<double> &x, const QVector<double> &y);
+
+    struct Data
+    {
+        QVector<double> coff; // Используем вектор для хранения значений
+    };
+
 protected slots:
     void applybutton();
     void closebutton();
@@ -44,6 +54,7 @@ protected slots:
     void polinomButton_approx();
     void saveApproxButton();
     void sendData();
+
 private:
     Ui::Polinom_builder *ui;
     QChart *chart, *chart_approx;
@@ -56,5 +67,6 @@ private:
     void save_vent_identf();
     QString QRegExp(const char *);
     QLocalServer *server;
+    QLocalSocket *socket;
 };
 #endif // POLINOM_BUILDER_H
