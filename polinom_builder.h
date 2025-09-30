@@ -55,6 +55,7 @@ protected slots:
     void saveApproxButton();
     void sendData();
 
+    void onLineEditTextChanged(const QString &text);
 private:
     Ui::Polinom_builder *ui;
     QChart *chart, *chart_approx;

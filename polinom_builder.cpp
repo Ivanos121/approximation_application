@@ -31,6 +31,12 @@ Polinom_builder::Polinom_builder(QWidget *parent)
 
     connect(ui->resieveButton, &QPushButton::clicked, this, &Polinom_builder::sendData);
 
+    // Устанавливаем валидатор для целых чисел от 0 до 5
+    QIntValidator *validator = new QIntValidator(0, 5, this);
+    ui->lineEdit->setValidator(validator);
+
+    // Подключаем сигнал textChanged к слоту для проверки значения
+    connect(ui->lineEdit, &QLineEdit::textChanged, this, &Polinom_builder::onLineEditTextChanged);
 
     ui->saveButton->setEnabled(false);
     ui->resultButton->setEnabled(false);
@@ -1229,3 +1235,15 @@ void Polinom_builder::sendData()
     }
 }
 
+void Polinom_builder::onLineEditTextChanged(const QString &text)
+{
+    bool ok;
+    int value = text.toInt(&ok);
+    if (ok && value > 5)
+    {
+        // Если значение больше 5, выводим сообщение
+        QMessageBox::warning(this, "Ошибка", "Число не может быть больше 5");
+        // Устанавливаем значение обратно на 5
+        ui->lineEdit->setText("5");
+    }
+}
