@@ -962,8 +962,9 @@ void Polinom_builder::updateButtonState()
     qDebug() << "Text2:" << text2; // Отладочное сообщение
 
     // Проверяем, содержит ли текст хотя бы один символ, кроме скобок
-    bool isEnabled = text1.contains(QRegularExpression("[^(){}\$$\$$]")) ||
-                     text2.contains(QRegularExpression("[^(){}\$$\$$]"));
+    static QRegularExpression re(R"([^(){}\$$\$$])");
+    bool isEnabled = text1.contains(re) ||
+                     text2.contains(re);
 
     ui->plotGraph->setEnabled(isEnabled);
     //ui->clearButton->setEnabled(isEnabled);
