@@ -2,7 +2,7 @@
 #include "ui_polinom_builder.h"
 #include "Poly_parametr.h"
 #include "polynomial.h"
-#include "plot.h"
+//#include "plot.h"
 
 #include <QGraphicsLayout>
 #include <QMessageBox>
@@ -18,6 +18,7 @@
 #include <QSettings>
 #include <algorithm>
 #include <QRegularExpression>
+#include <QSplineSeries>
 
 Poly_parameters poly_parameters;
 
@@ -41,23 +42,22 @@ Polinom_builder::Polinom_builder(QWidget *parent)
     ui->label_8->setText("<html>Выбор ввода<br>степени аппроксимации</html>");
     ui->statusbar->setVisible(false);
 
-
-    ui->plot->t_max = 10.0;
-    ui->plot->U_max = 10.0;
-    ui->plot->margin_bottom = 40;
-    ui->plot->margin_left = 100;
-    ui->plot->reset();
-
     dataLineColors_vent_identf.append(Qt::red);
 
     connect(ui->applyButton, &QPushButton::clicked, this, &Polinom_builder::applybutton);
     connect(ui->closeButton, &QPushButton::clicked, this, &Polinom_builder::closebutton);
     connect(ui->plotGraph, &QPushButton::clicked, this, &Polinom_builder::plotGraph);
     connect(ui->clearButton, &QPushButton::clicked, this, &Polinom_builder::clearButton);
+    connect(ui->clearButton, &QPushButton::clicked, this, &Polinom_builder::clearButton_approx);
+
     connect(ui->resultButton, &QPushButton::clicked, this, &Polinom_builder::resultButton);
     connect(ui->saveButton, &QPushButton::clicked, this, &Polinom_builder::saveButton);
     connect(ui->loadButton, &QPushButton::clicked, this, &Polinom_builder::loadButton);
-    connect(ui->polinomButton, &QPushButton::clicked, this, &Polinom_builder::polinomButtons);
+    //connect(ui->polinomButton, &QPushButton::clicked, this, &Polinom_builder::polinomButtons);
+    connect(ui->polinomButton, &QPushButton::clicked, this, &Polinom_builder::polinomButton_approx);
+    connect(ui->saveApproxButton, &QPushButton::clicked, this, &Polinom_builder::saveApproxButton);
+
+
     connect(ui->comboBox, &QComboBox::currentIndexChanged, this, &Polinom_builder::onComboBoxChanged);
     connect(ui->lineEditX, &QLineEdit::textChanged, this, &Polinom_builder::updateButtonState);
     connect(ui->lineEditY, &QLineEdit::textChanged, this, &Polinom_builder::updateButtonState);
@@ -66,21 +66,39 @@ Polinom_builder::Polinom_builder(QWidget *parent)
     chart->layout()->setContentsMargins(0,0,0,0);
     chart->setTitle(" ");
 
-    // Создаем серию данныхhhhhhhhhhhhhhhhhhh
+    chart_approx = new QChart();
+    chart_approx->layout()->setContentsMargins(0,0,0,0);
+    chart_approx->setTitle(" ");
+
+    // Создаем серию данных
     series = new QLineSeries();
     chart->addSeries(series);
 
+    series_approx = new QLineSeries();
+    chart_approx->addSeries(series_approx);
+
     // Удаляем легенду из графика
     chart->legend()->hide();
+
+    chart_approx->legend()->hide();
+
 
     // Создаем оси
     axisX = new QValueAxis();
     axisX->setTitleText("Ось X (Время)");
     axisX->setRange(0, 3); // Устанавливаем диапазон оси X
 
+    axisX_approx = new QValueAxis();
+    axisX_approx->setTitleText("Ось Х (Время)");
+    axisX_approx->setRange(0,3);
+
     axisY = new QValueAxis();
     axisY->setTitleText("Ось Y (Уровень)");
     axisY->setRange(0, 10); // Устанавливаем диапазон оси Y
+
+    axisY_approx = new QValueAxis();
+    axisY_approx->setTitleText("Ось Y (Уровень)");
+    axisY_approx->setRange(0,10);
 
     // Добавляем оси к графику
     chart->addAxis(axisX, Qt::AlignBottom);
@@ -88,8 +106,16 @@ Polinom_builder::Polinom_builder(QWidget *parent)
     series->attachAxis(axisX);
     series->attachAxis(axisY);
 
+    chart_approx->addAxis(axisX_approx, Qt::AlignBottom);
+    chart_approx->addAxis(axisY_approx, Qt::AlignLeft);
+    series_approx->attachAxis(axisX_approx);
+    series_approx->attachAxis(axisY_approx);
+
     // Устанавливаем график в QChartView
     ui->chartView->setChart(chart);
+
+    ui->chartView_approx->setChart(chart_approx);
+
 
    // Заполняем QComboBox отдельными элементами
     ui->comboBox->addItem("Ввести вручную");
@@ -148,6 +174,10 @@ void Polinom_builder::closebutton()
 
 void Polinom_builder::plotGraph()
 {
+    // Очищаем массивы перед добавлением новых данных
+    poly_parameters.timeArray.clear();
+    poly_parameters.levelArray.clear();
+
     // Считываем значения из QLineEdit
     QString timeText = ui->lineEditX->text();
     QString levelText = ui->lineEditY->text();
@@ -273,6 +303,13 @@ void Polinom_builder::plotGraph()
 
 void Polinom_builder::clearButton()
 {
+    // Удаляем все серии из графика
+    auto seriesList = ui->chartView->chart()->series();
+    for (auto s : std::as_const(seriesList))
+    {
+        ui->chartView->chart()->removeSeries(s);
+    }
+
     // Удаляем оси (если необходимо)
     auto axes = ui->chartView->chart()->axes();
 
@@ -288,6 +325,10 @@ void Polinom_builder::clearButton()
     // Восстанавливаем квадратные скобки в QLineEdit
     ui->lineEditX->setText("[]"); // Восстанавливаем квадратные скобки для времени
     ui->lineEditY->setText("[]"); // Восстанавливаем квадратные скобки для уровня
+
+    // Очищаем массивы timeArray и levelArray
+    poly_parameters.timeArray.clear();
+    poly_parameters.levelArray.clear();
 
     // Создаем новые оси
     QValueAxis *axisX = new QValueAxis;
@@ -332,7 +373,7 @@ void Polinom_builder::clearButton()
     // Отладочное сообщение
     qDebug() << "График очищен и поля ввода восстановлены.";
     clearTableExceptFirstRow();
-    ui->plot->clear();
+    //ui->plot->clear();
 
     ui->saveButton->setEnabled(false);
     ui->resultButton->setEnabled(false);
@@ -870,30 +911,30 @@ void Polinom_builder::save_vent_identf()
 
 void Polinom_builder::polinomButtons()
 {
-    // Проверяем, есть ли данные в серии
-    if (series->count() == 0)
-    {
-        QMessageBox::warning(this, "Внимание!", "Нет данных для построения графика");
-        return; // Выход из функции, если данных нет
-    }
+    // // Проверяем, есть ли данные в серии
+    // if (series->count() == 0)
+    // {
+    //     QMessageBox::warning(this, "Внимание!", "Нет данных для построения графика");
+    //     return; // Выход из функции, если данных нет
+    // }
 
-    ui->plot->t_max = poly_parameters.timeArray[poly_parameters.timeArray.size()-1];
-    ui->plot->U_max = poly_parameters.levelArray[poly_parameters.levelArray.size()-1];
-    ui->plot->margin_bottom = 40;
-    ui->plot->margin_left = 100;
-    ui->plot->reset();
+    // ui->plot->t_max = poly_parameters.timeArray[poly_parameters.timeArray.size()-1];
+    // ui->plot->U_max = poly_parameters.levelArray[poly_parameters.levelArray.size()-1];
+    // ui->plot->margin_bottom = 40;
+    // ui->plot->margin_left = 100;
+    // ui->plot->reset();
 
-    ui->plot->clear();
-    ui->plot->addDataLine(QColor(255,0,0), 0);
+    // ui->plot->clear();
+    // ui->plot->addDataLine(QColor(255,0,0), 0);
 
-    Polynomial x_y_inv_poly(poly_parameters.x_y_inv_koeffss);
+    // Polynomial x_y_inv_poly(poly_parameters.x_y_inv_koeffss);
 
-    for (int i = 0; i < 1000; i++)
-    {
-        double xx = poly_parameters.timeArray[poly_parameters.timeArray.size()-1] / (1000.0 - 1.0) * i;
-        double z = x_y_inv_poly.evaluate(xx);
-        ui->plot->addPoint(0,xx, z);
-    }
+    // for (int i = 0; i < 1000; i++)
+    // {
+    //     double xx = poly_parameters.timeArray[poly_parameters.timeArray.size()-1] / (1000.0 - 1.0) * i;
+    //     double z = x_y_inv_poly.evaluate(xx);
+    //     ui->plot->addPoint(0,xx, z);
+    // }
 }
 
 void Polinom_builder::onComboBoxChanged(int index)
@@ -926,4 +967,207 @@ void Polinom_builder::updateButtonState()
 
     ui->plotGraph->setEnabled(isEnabled);
     //ui->clearButton->setEnabled(isEnabled);
+}
+
+void Polinom_builder::clearButton_approx()
+{
+    // Удаляем все серии из графика
+    auto seriesList = ui->chartView_approx->chart()->series();
+    for (auto s : std::as_const(seriesList))
+    {
+        ui->chartView_approx->chart()->removeSeries(s);
+    }
+
+    // Удаляем оси (если необходимо)
+    auto axes = ui->chartView_approx->chart()->axes();
+
+    for (auto axis : std::as_const(axes))
+    {
+        ui->chartView_approx->chart()->removeAxis(axis);// Удаляем все серии из графика
+    }
+
+    // Очистка QLineEdit (если необходимо)
+    ui->lineEditX->clear();
+    ui->lineEditY->clear();
+
+    // Восстанавливаем квадратные скобки в QLineEdit
+    ui->lineEditX->setText("[]"); // Восстанавливаем квадратные скобки для времени
+    ui->lineEditY->setText("[]"); // Восстанавливаем квадратные скобки для уровня
+
+    // Создаем новые оси
+    QValueAxis *axisX_approx = new QValueAxis;
+    QValueAxis *axisY_approx = new QValueAxis;
+
+    // Устанавливаем диапазоны для осей (можно настроить по вашему усмотрению)
+    axisX_approx->setRange(0, 10); // Пример диапазона для оси X
+    axisY_approx->setRange(0, 10); // Пример диапазона для оси Y
+
+    // Добавляем оси в график
+    ui->chartView_approx->chart()->addAxis(axisX_approx, Qt::AlignBottom);
+    ui->chartView_approx->chart()->addAxis(axisY_approx, Qt::AlignLeft);
+
+    // Настройка сетки
+    axisX_approx->setGridLineVisible(true);
+    axisY_approx->setGridLineVisible(true);
+
+    // Создаем новую серию
+    series_approx = new QLineSeries();
+
+    // Добавляем новую серию в график
+    ui->chartView_approx->chart()->addSeries(series_approx);
+
+    // Привязываем оси к серии (если серия уже существует)
+    if (series_approx)
+    {
+        series_approx->attachAxis(axisX_approx);
+        series_approx->attachAxis(axisY_approx);
+    }
+
+    // Подписываем оси
+    auto xAxis_approx = qobject_cast<QValueAxis *>(ui->chartView_approx->chart()->axes(Qt::Horizontal).first());
+    if (xAxis_approx)
+    {
+        xAxis_approx->setTitleText("Ось X (Время)"); // Подпись для оси X
+    }
+
+    auto yAxis_approx = qobject_cast<QValueAxis *>(ui->chartView_approx->chart()->axes(Qt::Vertical).first());
+    if (yAxis_approx)
+    {
+        yAxis_approx->setTitleText("Ось Y (Уровень)"); // Подпись для оси Y
+    }
+
+    // Отладочное сообщение
+    qDebug() << "График очищен и поля ввода восстановлены.";
+    clearTableExceptFirstRow();
+    //ui->plot->clear();
+
+    ui->saveButton->setEnabled(false);
+    ui->resultButton->setEnabled(false);
+    ui->plotGraph->setEnabled(false);
+    ui->polinomButton->setEnabled(false);
+    ui->clearButton->setEnabled(false);
+}
+
+void Polinom_builder::polinomButton_approx()
+{
+    // Удаляем предыдущую серию, если она существует
+    if (ui->chartView_approx->chart()->series().size() > 0)
+    {
+        ui->chartView_approx->chart()->removeAllSeries();
+    }
+
+    // Создаем серию для графика
+    splineSeries = new QSplineSeries();
+
+    Polynomial x_y_inv_poly(poly_parameters.x_y_inv_koeffss);
+
+    for (int i = 0; i < 1000; i++)
+    {
+        double xx = poly_parameters.timeArray[poly_parameters.timeArray.size()-1] / (1000.0 - 1.0) * i;
+        double zz = x_y_inv_poly.evaluate(xx);
+        splineSeries->append(xx, zz);
+    }
+
+    // // Добавляем точки в сплайн-серию
+    // for (int i = 0; i < poly_parameters.timeArray.size(); ++i)
+    // {
+    //     splineSeries->append(poly_parameters.timeArray[i], poly_parameters.levelArray[i]);
+    // }
+
+    // Добавляем серию к графику
+    ui->chartView_approx->chart()->addSeries(splineSeries);
+    ui->chartView_approx->chart()->createDefaultAxes();
+
+    // Проверяем, что массивы не пустые перед установкой диапазонов осей
+    if (poly_parameters.timeArray.isEmpty() || poly_parameters.levelArray.isEmpty())
+    {
+        QMessageBox::warning(this, "Внимание!", "Ошибка: Один из массивов пуст. Диапазоны осей не будут установлены.");
+    }
+    else
+    {
+        ui->chartView_approx->chart()->axes(Qt::Horizontal).first()->setRange(*std::min_element(poly_parameters.timeArray.begin(), poly_parameters.timeArray.end()),
+                                                                       *std::max_element(poly_parameters.timeArray.begin(), poly_parameters.timeArray.end()));
+        ui->chartView_approx->chart()->axes(Qt::Vertical).first()->setRange(*std::min_element(poly_parameters.levelArray.begin(), poly_parameters.levelArray.end()),
+                                                                     *std::max_element(poly_parameters.levelArray.begin(), poly_parameters.levelArray.end()));
+    }
+
+    // Подписываем оси
+    auto xAxis_approx = qobject_cast<QValueAxis *>(ui->chartView_approx->chart()->axes(Qt::Horizontal).first());
+    if (xAxis_approx)
+    {
+        xAxis_approx->setTitleText("Ось X (Время)"); // Подпись для оси X
+    }
+
+    auto yAxis_approx = qobject_cast<QValueAxis *>(ui->chartView_approx->chart()->axes(Qt::Vertical).first());
+    if (yAxis_approx)
+    {
+        yAxis_approx->setTitleText("Ось Y (Уровень)"); // Подпись для оси Y
+    }
+
+    // Отладочное сообщение о завершении
+    qDebug() << "График обновлен.";
+
+    ui->saveButton->setEnabled(true);
+    ui->resultButton->setEnabled(true);
+    ui->plotGraph->setEnabled(true);
+    ui->polinomButton->setEnabled(true);
+    ui->clearButton->setEnabled(true);
+}
+
+void Polinom_builder::saveApproxButton()
+{
+    QString str_approx;
+    QString filter = "Данные сигнала скорости (*.xml);;Все файлы (*.*)";
+    QString selectedFilter;  // Переменная для хранения выбранного фильтра
+    QString initialPath = "../Reference materials"; // Замените на нужный путь
+
+
+    str_approx = QFileDialog::getSaveFileName(this, "Выбрать имя, под которым сохранить данные", initialPath
+                                       , filter, &selectedFilter);
+    if (!str_approx.isEmpty())
+    {
+        if (selectedFilter == "Данные сигнала скорости (*.xml)" && !str_approx.endsWith(".xml"))
+        {
+            str_approx += ".xml";
+        }
+    }
+
+    bool saved = saveKoeffsToXml(str_approx);
+    if (saved)
+    {
+        qDebug() << "Данные успешно сохранены в XML";
+    }
+    else
+    {
+        qDebug() << "Ошибка сохранения XML";
+    }
+}
+
+bool Polinom_builder::saveKoeffsToXml(const QString &fileName)
+{
+    QString str = fileName;
+
+    QFile file(str);
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+
+    QXmlStreamWriter xml(&file);
+    xml.setAutoFormatting(true);
+    xml.writeStartDocument();
+    xml.writeStartElement("Koefficients");  // Корневой элемент
+
+    // Сохраняем коэффициенты
+    for (int i = 0; i < poly_parameters.x_y_inv_koeffss.size(); ++i)
+    {
+        xml.writeStartElement("Coefficient");
+        xml.writeAttribute("index", QString::number(i + 1)); // Индекс коэффициента
+        xml.writeCharacters(QString::number(poly_parameters.x_y_inv_koeffss[i])); // Значение коэффициента
+        xml.writeEndElement(); // Coefficient
+    }
+
+    xml.writeEndElement(); // Koefficients
+    xml.writeEndDocument();
+
+    file.close();
+    qDebug() << "Сохранено коэффициентов:" << poly_parameters.x_y_inv_koeffss.size();
+    return true;
 }

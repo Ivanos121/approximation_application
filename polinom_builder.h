@@ -32,18 +32,23 @@ protected slots:
     void resultButton();
     void saveButton();
     bool savePointsToXml(const QString &fileName);
+    bool saveKoeffsToXml(const QString &fileName);
     void loadButton();
     bool loadPointsFromXml();
     void polinomButtons();
 
     void onComboBoxChanged(int index);
     void updateButtonState();
+    void clearButton_approx();
+    void polinomButton_approx();
+    void saveApproxButton();
 private:
     Ui::Polinom_builder *ui;
-    QChart *chart;
-    QLineSeries *series;
-    QValueAxis *axisX;
-    QValueAxis *axisY;
+    QChart *chart, *chart_approx;
+    QLineSeries *series, *series_approx;
+    QLineSeries *splineSeries;
+    QValueAxis *axisX, *axisX_approx;
+    QValueAxis *axisY, *axisY_approx;
     void addRows();
     void clearTableExceptFirstRow();
     void save_vent_identf();
